@@ -61,6 +61,8 @@ type APIClient struct {
 
 	DeleteApi DeleteApi
 
+	FunctionsApi FunctionsApi
+
 	HealthApi HealthApi
 
 	LegacyAuthorizationsApi LegacyAuthorizationsApi
@@ -111,6 +113,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.DBRPsApi = (*DBRPsApiService)(&c.common)
 	c.DashboardsApi = (*DashboardsApiService)(&c.common)
 	c.DeleteApi = (*DeleteApiService)(&c.common)
+	c.FunctionsApi = (*FunctionsApiService)(&c.common)
 	c.HealthApi = (*HealthApiService)(&c.common)
 	c.LegacyAuthorizationsApi = (*LegacyAuthorizationsApiService)(&c.common)
 	c.OrganizationsApi = (*OrganizationsApiService)(&c.common)

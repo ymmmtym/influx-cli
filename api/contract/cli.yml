@@ -99,6 +99,12 @@ paths:
     $ref: "./openapi/src/common/paths/authorizations.yml"
   /authorizations/{authID}:
     $ref: "./openapi/src/common/paths/authorizations_authID.yml"
+  /functions:
+    $ref: "./openapi/src/svc/managed-functions/paths/functions.yml"
+  /functions/{functionID}:
+    $ref: "./openapi/src/svc/managed-functions/paths/functions_functionID.yml"
+  /functions/{functionID}/invoke:
+    $ref: "./openapi/src/svc/managed-functions/paths/functions_functionID_invoke.yml"
 components:
   parameters:
     TraceSpan:
@@ -391,3 +397,17 @@ components:
       $ref: "./openapi/src/oss/schemas/LegacyAuthorizationPostRequest.yml"
     AuthorizationPostRequest:
       $ref: "./openapi/src/common/schemas/AuthorizationPostRequest.yml"
+    Function:
+      $ref: "./openapi/src/svc/managed-functions/schemas/Function.yml"
+    Functions:
+      $ref: "./openapi/src/svc/managed-functions/schemas/Functions.yml"
+    FunctionCreateRequest:
+      $ref: "./openapi/src/svc/managed-functions/schemas/FunctionCreateRequest.yml"
+    FunctionUpdateRequest:
+      $ref: "./openapi/src/svc/managed-functions/schemas/FunctionUpdateRequest.yml"
+    FunctionInvocationParams:
+      $ref: "./openapi/src/svc/managed-functions/schemas/FunctionInvocationParams.yml"
+    FunctionHTTPResponseData:
+      $ref: "./openapi/src/svc/managed-functions/schemas/FunctionHTTPResponseData.yml"
+    FunctionLanguage: 
+      $ref: "./openapi/src/svc/managed-functions/schemas/FunctionLanguage.yml"
