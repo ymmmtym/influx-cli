@@ -119,9 +119,9 @@ type FunctionsApi interface {
 
 	/*
 	 * PostFunctionsIDInvokeExecute executes the request
-	 * @return map[string]interface{}
+	 * @return string
 	 */
-	PostFunctionsIDInvokeExecute(r ApiPostFunctionsIDInvokeRequest) (map[string]interface{}, error)
+	PostFunctionsIDInvokeExecute(r ApiPostFunctionsIDInvokeRequest) (string, error)
 
 	// Sets additional descriptive text in the error message if any request in
 	// this API fails, indicating that it is intended to be used only on OSS
@@ -1055,7 +1055,7 @@ func (r ApiPostFunctionsIDInvokeRequest) GetFunctionInvocationParams() *Function
 	return r.functionInvocationParams
 }
 
-func (r ApiPostFunctionsIDInvokeRequest) Execute() (map[string]interface{}, error) {
+func (r ApiPostFunctionsIDInvokeRequest) Execute() (string, error) {
 	return r.ApiService.PostFunctionsIDInvokeExecute(r)
 }
 
@@ -1075,16 +1075,16 @@ func (a *FunctionsApiService) PostFunctionsIDInvoke(ctx _context.Context, functi
 
 /*
  * Execute executes the request
- * @return map[string]interface{}
+ * @return string
  */
-func (a *FunctionsApiService) PostFunctionsIDInvokeExecute(r ApiPostFunctionsIDInvokeRequest) (map[string]interface{}, error) {
+func (a *FunctionsApiService) PostFunctionsIDInvokeExecute(r ApiPostFunctionsIDInvokeRequest) (string, error) {
 	var (
 		localVarHTTPMethod   = _nethttp.MethodPost
 		localVarPostBody     interface{}
 		localVarFormFileName string
 		localVarFileName     string
 		localVarFileBytes    []byte
-		localVarReturnValue  map[string]interface{}
+		localVarReturnValue  string
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "FunctionsApiService.PostFunctionsIDInvoke")
@@ -1109,7 +1109,7 @@ func (a *FunctionsApiService) PostFunctionsIDInvokeExecute(r ApiPostFunctionsIDI
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
+	localVarHTTPHeaderAccepts := []string{"text/plain", "application/json"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)

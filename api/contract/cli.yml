@@ -104,7 +104,7 @@ paths:
   /functions/{functionID}:
     $ref: "./openapi/src/svc/managed-functions/paths/functions_functionID.yml"
   /functions/{functionID}/invoke:
-    $ref: "./openapi/src/svc/managed-functions/paths/functions_functionID_invoke.yml"
+    $ref: "./overrides/paths/functions_functionID_invoke.yml"
 components:
   parameters:
     TraceSpan:

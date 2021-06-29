@@ -22,10 +22,10 @@ get:
       content:
         application/json:
           schema:
-            $ref: '../schemas/FunctionHTTPResponseData.yml'
+            $ref: '../../openapi/src/svc/managed-functions/schemas/FunctionHTTPResponseData.yml'
     default:
       description: Unexpected error
-      $ref: '../../../common/responses/ServerError.yml'
+      $ref: '../../openapi/src/common/responses/ServerError.yml'
 post:
   operationId: PostFunctionsIDInvoke
   tags:
@@ -41,7 +41,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: '../schemas/FunctionInvocationParams.yml'
+          $ref: '../../openapi/src/svc/managed-functions/schemas/FunctionInvocationParams.yml'
   responses:
     '200':
       description: Response defined by function
@@ -54,4 +54,4 @@ post:
         #     $ref: '../schemas/FunctionHTTPResponseData.yml'
     default:
       description: Unexpected error
-      $ref: '../../../common/responses/ServerError.yml'
+      $ref: '../../openapi/src/common/responses/ServerError.yml'
