@@ -12,6 +12,7 @@ import (
 type Client struct {
 	clients.CLI
 	api.FunctionsApi
+	api.OrganizationsApi
 }
 
 type functionPrintOpts struct {
@@ -62,7 +63,7 @@ func (c Client) List(ctx context.Context, params *ListParams) error {
 
 	functions, err := req.Execute()
 	if err != nil {
-		return fmt.Errorf("failed to list dbrps: %w", err)
+		return fmt.Errorf("failed to list functions: %w", err)
 	}
 
 	c.printFunctions(functionPrintOpts{functions: functions.GetFunctions()})
@@ -70,7 +71,160 @@ func (c Client) List(ctx context.Context, params *ListParams) error {
 	return nil
 }
 
+type CreateParams struct {
+	clients.OrgParams
+	Name        string
+	Description string
+	Script      string
+	Language    string
+}
+
+func (c Client) Create(ctx context.Context, params *CreateParams) error {
+	if !params.OrgID.Valid() && params.OrgName == "" && c.ActiveConfig.Org == "" {
+		return clients.ErrMustSpecifyOrg
+	}
+
+	reqBody := api.FunctionCreateRequest{
+		Name:   params.Name,
+		Script: params.Script,
+	}
+
+	var lang api.FunctionLanguage
+	if err := lang.UnmarshalJSON([]byte(fmt.Sprintf("%q", params.Language))); err != nil {
+		return err
+	}
+	reqBody.Language = lang
+
+	if params.Description != "" {
+		reqBody.Description = &params.Description
+	}
+
+	// The org ID will be obtained based on the org name if an org name is
+	// provided but not an org ID.
+	if params.OrgID.Valid() {
+		reqBody.OrgID = params.OrgID.String()
+	} else {
+		orgName := params.OrgName
+		if orgName == "" {
+			orgName = c.ActiveConfig.Org
+		}
+		res, err := c.GetOrgs(ctx).Org(orgName).Execute()
+		if err != nil {
+			return fmt.Errorf("failed to look up ID for org %q: %w", orgName, err)
+		}
+		if len(res.GetOrgs()) == 0 {
+			return fmt.Errorf("no org found with name %q", orgName)
+		}
+		reqBody.OrgID = res.GetOrgs()[0].GetId()
+	}
+
+	function, err := c.PostFunctions(ctx).FunctionCreateRequest(reqBody).Execute()
+
+	if err != nil {
+		return fmt.Errorf("failed to create function: %w", err)
+	}
+
+	c.printFunctions(functionPrintOpts{function: &function})
+
+	return nil
+}
+
+type GetParams struct {
+	ID string
+}
+
+func (c Client) Get(ctx context.Context, params *GetParams) error {
+	function, err := c.GetFunctionsID(ctx, params.ID).Execute()
+	if err != nil {
+		return fmt.Errorf("failed to get function %q: %w", params.ID, err)
+	}
+
+	c.printFunctions(functionPrintOpts{function: &function})
+
+	return nil
+}
+
+type DeleteParams struct {
+	ID string
+}
+
+func (c Client) Delete(ctx context.Context, params *DeleteParams) error {
+	function, err := c.GetFunctionsID(ctx, params.ID).Execute()
+	if err != nil {
+		return fmt.Errorf("failed to delete function %q: %w", params.ID, err)
+	}
+
+	err = c.DeleteFunctionsID(ctx, params.ID).Execute()
+	if err != nil {
+		return fmt.Errorf("failed to delete function %q: %w", params.ID, err)
+	}
+
+	c.printFunctions(functionPrintOpts{function: &function})
+
+	return nil
+}
+
+type UpdateParams struct {
+	ID          string
+	Name        string
+	Description string
+	Script      string
+}
+
+func (c Client) Update(ctx context.Context, params *UpdateParams) error {
+	reqBody := api.FunctionUpdateRequest{}
+
+	if params.Name != "" {
+		reqBody.Name = &params.Name
+	}
+	if params.Description != "" {
+		reqBody.Description = &params.Description // TODO: updating the description doesn't seem to work
+	}
+	if params.Script != "" {
+		reqBody.Script = &params.Script
+	}
+
+	req := c.PatchFunctionsID(ctx, params.ID)
+	function, err := req.FunctionUpdateRequest(reqBody).Execute()
+	if err != nil {
+		return fmt.Errorf("failed to update managed function %q: %w", params.ID, err)
+	}
+
+	c.printFunctions(functionPrintOpts{function: &function})
+
+	return nil
+}
+
+type InvokeParams struct {
+	ID         string
+	FuncParams map[string]interface{}
+}
+
+func (c Client) Invoke(ctx context.Context, params *InvokeParams) error {
+	reqBody := api.FunctionInvocationParams{}
+
+	if len(params.FuncParams) > 0 {
+		reqBody.SetParams(params.FuncParams)
+	}
+
+	req := c.PostFunctionsIDInvoke(ctx, params.ID)
+	res, err := req.FunctionInvocationParams(reqBody).Execute()
+	if err != nil {
+		return fmt.Errorf("failed to execute managed function %q: %w", params.ID, err)
+	}
+
+	// Placeholder for more sophisticated result handling. Could be adapted from
+	// the query result printer perhaps.
+	fmt.Println(res)
+
+	return nil
+}
+
 func (c Client) printFunctions(opts functionPrintOpts) error {
+	if opts.function != nil {
+		opts.functions = append(opts.functions, *opts.function)
+	}
+
 	if c.PrintAsJSON {
 		var v interface{} = opts.functions
 		if opts.functions != nil {
@@ -84,29 +238,17 @@ func (c Client) printFunctions(opts functionPrintOpts) error {
 		"Name",
 		"Description",
 		"Organization ID",
-		"Script", // We probably won't actually want this to be output with the list
 		"Language",
-		"URL",
-		"Created At",
-		"Updated At",
-	}
-
-	if opts.function != nil {
-		opts.functions = append(opts.functions, *opts.function)
 	}
 
 	var rows []map[string]interface{}
 	for _, t := range opts.functions {
 		row := map[string]interface{}{
-			"ID":              t.Id,
+			"ID":              *t.Id,
 			"Name":            t.Name,
-			"Description":     t.Description,
+			"Description":     *t.Description,
 			"Organization ID": t.OrgID,
-			"Script":          t.Script, // We probably won't actually want this to be output with the list
-			"Language":        t.Language,
-			"URL":             t.Url,
-			"Created At":      t.CreatedAt,
-			"Updated At":      t.UpdatedAt,
+			"Language":        *t.Language,
 		}
 		rows = append(rows, row)
 	}
